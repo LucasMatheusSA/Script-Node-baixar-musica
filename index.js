@@ -9,6 +9,7 @@ const LINK_CONVERT = 'https://dvr.yout.com/mp3';
 
 searchVideo();
 
+
 function getSongs(){
     let data = fs.readFileSync(file,'utf8');
     data = data.split("\r");
@@ -74,13 +75,11 @@ function checkSong(htmlVideo,name){
 
             const title = convertWord(telaVideo('.watch-title').html());
 
-            console.log(telaVideo('script').html());
-
             if(name == title){
                 let url = LINK_YOUTUBE + htmlVideo;
                 url = url.replace("youtube","yout");
 
-                // downloadSong(url,desconvertWord(name));
+                downloadSong(url,desconvertWord(name));
 
             }else{
                 console.log("Deu ruim, video errado ... ("+ desconvertWord(name) +")");
@@ -93,9 +92,11 @@ function checkSong(htmlVideo,name){
 
 function downloadSong(url,name){
 
+    var base64 = new Buffer(url.replace("https://www.yout.com/watch?","")).toString('base64');
+
     var obj = {
         video_id : url.replace("https://www.yout.com/watch?v=",""),
-        video_url : 'aHR0cHM6Ly93d3cueW91dHViZS5jb20vd2F0Y2g/dj1zYmkwc3gybXotUQ==',
+        video_url : 'aHR0cHM6Ly93d3cueW91dHViZS5jb20vd2F0Y2g/'+ base64 +'=',
         format : 'mp3', // padrão   
         title : name, // nome da musica
         artist : '', // nome do artista 
@@ -104,7 +105,6 @@ function downloadSong(url,name){
         thingy : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbF9mb3JfYXBpX2FjY2VzcyI6ImpvaG5AbmFkZXIubXgifQ.YPt3Eb3xKekv2L3KObNqMF25vc2uVCC-aDPIN2vktmA',
         audio_quality : '128k', // padrão
     }
-
         
     request.post(LINK_CONVERT , { form : obj })
     .on('error', function(err) {
@@ -115,6 +115,9 @@ function downloadSong(url,name){
     console.log("Fim download (" + name + ")");
 
 }
+
+
+
 
 
 
