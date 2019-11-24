@@ -7,8 +7,9 @@ const file = "Songs.txt"
 const LINK_YOUTUBE = 'https://www.youtube.com';
 const LINK_CONVERT = 'https://dvr.yout.com/mp3';
 
-searchVideo();
+const cont = 0;
 
+searchVideo();
 
 function getSongs(){
     let data = fs.readFileSync(file,'utf8');
@@ -39,6 +40,22 @@ function searchVideo(){
 
     if(songs != null){
 
+        var data = new Date();
+
+        var dia     = data.getDate();           // 1-31
+        var mes     = data.getMonth();          // 0-11 (zero=janeiro)
+        var ano    = data.getFullYear();       // 4 dígitos
+        var hora    = data.getHours();          // 0-23
+        var min     = data.getMinutes();        // 0-59
+
+        var str_data = dia + '/' + (mes+1) + '/' + ano;
+        var str_hora = hora + ':' + min ;
+
+        fs.appendFile('./Songs/RelatorioSongs.txt',"\n===== > "+songs.length+" Musica(as) (" + str_data +" - " + str_hora + ")\n\n",{enconding:'utf-8'}, function (err) {
+            if (err) throw err;
+        });
+
+
         songs.forEach(function (item,index){
             item = convertWord(item);
             
@@ -57,10 +74,11 @@ function searchVideo(){
                     checkSong(links[0],item);
 
                 }else{
-                    console.log("Deu ruim na pesquisa pelo nome (" + item + ")!!!");
+                    console.log("Deu ruim na pesquisa pelo nome (" + item + ")!!!");gravar('Erro',desconvertWord(item));
                 }
             })
         })
+
     }else{
         console.log("Não tem nenhuma musica para ser baixada !!!");
     }
@@ -82,21 +100,21 @@ function checkSong(htmlVideo,name){
                 downloadSong(url,desconvertWord(name));
 
             }else{
-                console.log("Deu ruim, video errado ... ("+ desconvertWord(name) +")");
+                console.log("Deu ruim, video errado ... ("+ desconvertWord(name) +")");gravar('Erro',desconvertWord(name));
             }
         }else{
-            console.log("Deu ruim na tela de videos !!!");
+            console.log("Deu ruim na tela de videos !!!");gravar('Erro',desconvertWord(name));
         }
     })
 }
 
 function downloadSong(url,name){
 
-    var base64 = new Buffer(url.replace("https://www.yout.com/watch?","")).toString('base64');
+    var base64 = new Buffer.from(url.replace("https://www.yout.com/watch?","")).toString('base64');
 
     var obj = {
         video_id : url.replace("https://www.yout.com/watch?v=",""),
-        video_url : 'aHR0cHM6Ly93d3cueW91dHViZS5jb20vd2F0Y2g/'+ base64 +'=',
+        video_url : 'aHR0cHM6Ly93d3cueW91dHViZS5jb20vd2F0Y2g/'+ base64 ,
         format : 'mp3', // padrão   
         title : name, // nome da musica
         artist : '', // nome do artista 
@@ -109,11 +127,20 @@ function downloadSong(url,name){
     request.post(LINK_CONVERT , { form : obj })
     .on('error', function(err) {
         console.log("Deu ruim, Donwload não funcionou (" + name + ")");
+        gravar('Erro',name);
     })
     .pipe(fs.createWriteStream("./Songs/" + name + '.mp3'));
     
     console.log("Fim download (" + name + ")");
+    gravar('Baixada',name);
 
+    
+}
+
+function gravar(status,name){
+    fs.appendFile('./Songs/RelatorioSongs.txt',"( " + status +" ) - " + name + "\n",{enconding:'utf-8'}, function (err) {
+        if (err) throw err;
+    });
 }
 
 
